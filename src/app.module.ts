@@ -6,7 +6,9 @@ import { ConfigModule } from '@nestjs/config';
 
 
 @Module({
-  imports: [ConfigModule.forRoot({isGlobal:true}), UsersModule, AuthModule, TasksModule],
+  imports: [ConfigModule.forRoot({isGlobal:true,envFilePath: '.env'}),  UsersModule, AuthModule, TasksModule,
+  ],
+  
  
 })
 export class AppModule {}

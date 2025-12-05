@@ -1,45 +1,51 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
-import { UsersService } from "src/users/users.service";
-import * as bcrypt from 'bcrypt'
-
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { UsersService } from 'src/users/users.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable({})
-export class AuthService{
-    constructor(private usersService: UsersService,
-                private jwtService: JwtService,
-    ){}
+export class AuthService {
+  constructor(
+    private usersService: UsersService,
+    private jwtService: JwtService,
+  ) {}
 
-    async login(username: string, password: string) {
-        const user = await this.usersService.findByUsername(username)
-
-        if(!user){
-        throw new UnauthorizedException('Invalid Credentials')
-        }
-
-        const isPasswordValid = await bcrypt.compare(password, user.password)
-
-        if(!isPasswordValid){
-            throw new UnauthorizedException('Invalid Credentials')
-        }
-
-        const payload = {username: user.username, sub: user.id, role: user.role};
-        
-        return{
-            access_token: this.jwtService.sign(payload),
-            user: {id: user.id, username: user.username, role: user.role},
-        };
-    }
-
-    async register(username: string, password: string, role: string = 'user'){
-
-        const hashedPassword = await bcrypt.hash(password,10);
-        return this.usersService.create(username, hashedPassword, role);
-    }
+  async login(username: string, password: string) {
     
-      async getAllUsers() {
-    return this.usersService.getAllUsers();
+
+    const user = await this.usersService.findByUsername(username);
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid Credentials');
+
+    }
+    console.log('CHECKING PASSWORD:', {
+      rawPassword: password,
+      storedPassword: user.password,
+    });
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    console.log('COMPARE RESULT:', isPasswordValid);
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid Credentials');
+    }
+    console.log("JWT SECRET USED:", this.jwtService['options']);
+
+    const payload = { username: user.username, sub: user.id, role: user.role };
+
+    return {
+      access_token: this.jwtService.sign(payload),
+      user: { id: user.id, username: user.username, role: user.role },
+    };
   }
 
-    
+  async register(username: string, password: string, role: string = 'user') {
+    return this.usersService.create(username, password, role);
+  }
+
+  async getAllUsers() {
+    return this.usersService.getAllUsers();
+  }
 }
