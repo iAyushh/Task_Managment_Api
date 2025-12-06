@@ -61,7 +61,9 @@ export class TaskService {
       throw new NotFoundException(`Task with ID ${id} not found`);
     }
 
-    this.tasks[taskIndex] = { ...task, ...updateTaskDto };
+    this.tasks[taskIndex] = { ...task, ...(updateTaskDto.title !== undefined && updateTaskDto.title !== ''&& { title: updateTaskDto.title } ), ...(updateTaskDto.description !== undefined && updateTaskDto.description !== '' && { description: updateTaskDto.description } ), ...(updateTaskDto.status !== undefined && updateTaskDto.status !== '' && { status: updateTaskDto.status } )
+      
+    };
     return this.tasks[taskIndex];
   }
 

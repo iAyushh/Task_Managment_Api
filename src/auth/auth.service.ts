@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
 
-@Injectable({})
+@Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
@@ -19,19 +19,16 @@ export class AuthService {
       throw new UnauthorizedException('Invalid Credentials');
 
     }
-    console.log('CHECKING PASSWORD:', {
-      rawPassword: password,
-      storedPassword: user.password,
-    });
+   
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
-    console.log('COMPARE RESULT:', isPasswordValid);
+   
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid Credentials');
     }
-    console.log("JWT SECRET USED:", this.jwtService['options']);
+   
 
     const payload = { username: user.username, sub: user.id, role: user.role };
 

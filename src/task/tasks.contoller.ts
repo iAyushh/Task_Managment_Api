@@ -46,8 +46,12 @@ export class TasksController {
   }
 
   @Delete(':id')
+  @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   remove(@Param('id') id: string, @Request() req) {
+    console.log('Delete task - User:', req.user);
+    console.log('User role:', req.user.role);
+    console.log('Required role:', Role.ADMIN);
     this.tasksService.remove(+id, req.user.userId, req.user.role);
     return { message: 'Task deleted successfully' };
   }
