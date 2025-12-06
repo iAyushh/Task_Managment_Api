@@ -2,7 +2,7 @@ import { SetMetadata } from "@nestjs/common";
 
 export enum Role{
     USER = 'user',
-    ADMIN = 'admin,'
+    ADMIN = 'admin'
 }
 
 export const ROLES_KEY = 'roles';
