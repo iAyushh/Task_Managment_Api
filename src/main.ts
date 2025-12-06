@@ -16,7 +16,7 @@ async function bootstrap() {
   app.use(new RequestLoggerMiddleware().use);
   await(app.listen(3000));
   console.log('App is running on port 3000');
-  console.log(process.env.JWT_SECRET)
+  
   
 }
 bootstrap();
