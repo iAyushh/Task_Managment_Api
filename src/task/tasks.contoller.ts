@@ -14,8 +14,8 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
-import { Roles, Role } from '../common/decorators/roles.decorators';
-
+import { Roles } from '../common/decorators/roles.decorators';
+import { Role } from '@prisma/client';
 @Controller('tasks')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TasksController {
@@ -28,7 +28,7 @@ export class TasksController {
 
   @Get()
   findAll(@Request() req) {
-    return this.tasksService.findAll(req.user.userId, req.user.role);
+    return this.tasksService.findMyTasks(req.user.userId);
   }
 
   @Get(':id')

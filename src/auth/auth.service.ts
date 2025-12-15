@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -38,7 +39,7 @@ export class AuthService {
     };
   }
 
-  async register(username: string, password: string, role: string = 'user') {
+  async register(username: string, password: string, role: Role = Role.USER) {
     return this.usersService.create(username, password, role);
   }
 

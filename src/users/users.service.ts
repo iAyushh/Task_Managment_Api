@@ -1,20 +1,17 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-
-export interface User {
-  id: number;
-  username: string;
-  password: string;
-  role: string;
-}
+import { PrismaService } from 'prisma/prisma.service';
+import {User , Role} from '@prisma/client'
 
 @Injectable()
 export class UsersService {
-  private users: User[] = [];
-  private currentId = 1;
+  constructor(private prisma: PrismaService){}
+  
 
-  async create(username: string, password: string, role: string = 'user') {
-    const existingUser = this.users.find((u) => u.username === username);
+  async create(username: string, password: string, role: Role = Role.USER):Promise<Omit<User,'password'>> {
+    const existingUser = await this.prisma.user.findUnique({
+      where: {username},
+    });
 
     if (existingUser) {
       throw new ConflictException('User Already Exists.');
@@ -22,30 +19,32 @@ export class UsersService {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user: User = {
-      id: this.currentId++,
-      username,
-      password: hashedPassword,
-      role,
-    };
+    const user = await this.prisma.user.create({
+      data:{
+        username,
+        password: hashedPassword,
+        role ,
 
-    this.users.push(user);
+      }
+    })
     const { password: _, ...result } = user;
     return result;
   }
 
-  async findByUsername(username: string): Promise<User | undefined> {
-    const found = this.users.find((u) => u.username === username);
-    console.log('USER FROM ARRAY:', found);
-    return found;
+  async findByUsername(username: string):Promise<User|null> {
+    return this.prisma.user.findUnique({
+      where: {username},
+  })
   }
 
-  getAllUsers() {
-    return this.users.map((user) => ({
+   async getAllUsers() {
+    const users = await this.prisma.user.findMany();
+
+    return users.map((user)=>({
       id: user.id,
       username: user.username,
       role: user.role,
-      password: user.password.substring(0, 20) + '...',
+      password: user.password.substring(0,10)+ '...',
     }));
   }
 }

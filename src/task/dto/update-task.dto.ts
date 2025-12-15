@@ -1,6 +1,6 @@
+import { TaskStatus } from '@prisma/client';
 
-
-import { IsString, IsOptional, IsIn } from 'class-validator';
+import { IsString, IsOptional, IsIn, IsEnum } from 'class-validator';
 
 export class UpdateTaskDto {
   @IsString()
@@ -11,8 +11,8 @@ export class UpdateTaskDto {
   @IsOptional()
   description?: string;
 
-  @IsString()
+  @IsEnum(TaskStatus)
   @IsOptional()
-  @IsIn(['pending', 'in-progress', 'completed'])
-  status?: string;
+  
+  status?: TaskStatus;
 }

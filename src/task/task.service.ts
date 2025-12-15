@@ -1,83 +1,70 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { PrismaService } from 'prisma/prisma.service';
+import { Task, Role } from '@prisma/client';
 
-export interface Task {
-  id: number;
-  title: string;
-  description?: string;
-  status: string;
-  userId: number;
-  createdAt: Date;
-}
+
 
 @Injectable()
-export class TaskService {
-  private tasks: Task[] = [];
-  private currentId = 1;
+export class TaskService{ 
+  constructor (private prisma: PrismaService){}
+  
+  async create(createTaskDto: CreateTaskDto, userId: number):Promise <Task> {
+   return this.prisma.task.create({
+      data:{
+        title: createTaskDto.title,
+        description: createTaskDto.description,
+        status: createTaskDto.status,
+        userId: userId,
 
-  create(createTaskDto: CreateTaskDto, userId: number): Task {
-    const task: Task = {
-      id: this.currentId++,
-      ...createTaskDto,
-      userId,
-      createdAt: new Date(),
-    };
-    this.tasks.push(task);
+      }
+    });
+  }
+  findMyTasks(userId: number): Promise<Task[]>{
+    return this.prisma.task.findMany({
+      where:{userId},
+    })
+  }
+
+ async findOne(id: number, userId: number, role: Role): Promise<Task> {
+    const task = await this.prisma.task.findUnique({
+      where: {id},
+    })
+    if(!task){
+      throw new NotFoundException(`Task with ID ${id} not found`);
+    }
+
+    if(role!== Role.ADMIN && task.userId !== userId){
+      throw new NotFoundException(`Task with ID ${id} not found`);
+    }
     return task;
   }
 
-  findAll(userId?: number, role?: string): Task[] {
-    if (role === 'admin') {
-      return this.tasks;
-    }
-    return this.tasks.filter((task) => task.userId === userId);
-  }
-
-  findOne(id: number, userId: number, role: string): Task {
-    const task = this.tasks.find((t) => t.id === id);
-    if (!task) {
-      throw new NotFoundException(`Task with ID ${id} not found`);
-    }
-    if (role !== 'admin' && task.userId !== userId) {
-      throw new NotFoundException(`Task with ID ${id} not found`);
-    }
-    return task;
-  }
-
-  update(
+  async update( 
     id: number,
     updateTaskDto: UpdateTaskDto,
     userId: number,
-    role: string,
-  ): Task {
-    const taskIndex = this.tasks.findIndex((t) => t.id === id);
-    if (taskIndex === -1) {
-      throw new NotFoundException(`Task with ID ${id} not found`);
-    }
+    role: Role
 
-    const task = this.tasks[taskIndex];
-    if (role !== 'admin' && task.userId !== userId) {
-      throw new NotFoundException(`Task with ID ${id} not found`);
-    }
-
-    this.tasks[taskIndex] = { ...task, ...(updateTaskDto.title !== undefined && updateTaskDto.title !== ''&& { title: updateTaskDto.title } ), ...(updateTaskDto.description !== undefined && updateTaskDto.description !== '' && { description: updateTaskDto.description } ), ...(updateTaskDto.status !== undefined && updateTaskDto.status !== '' && { status: updateTaskDto.status } )
-      
-    };
-    return this.tasks[taskIndex];
+  ): Promise<Task>{
+    const task = await this.findOne(id, userId, role);
+    return this.prisma.task.update({
+      where: {id: task.id},
+      data:{
+        title: updateTaskDto.title,
+        description: updateTaskDto.description,
+        status: updateTaskDto.status,
+      },
+    });
   }
 
-  remove(id: number, userId: number, role: string): void {
-    const taskIndex = this.tasks.findIndex((t) => t.id === id);
-    if (taskIndex === -1) {
-      throw new NotFoundException(`Task with ID ${id} not found`);
-    }
-
-    const task = this.tasks[taskIndex];
-    if (role !== 'admin' && task.userId !== userId) {
-      throw new NotFoundException(`Task with ID ${id} not found`);
-    }
-
-    this.tasks.splice(taskIndex, 1);
+  async remove(id: number, userId:number, role: Role):Promise<void>{
+    const task = await this.findOne(id, userId, role);
+    await this.prisma.task.delete({
+      where: {id:task.id},
+    });
   }
+
+  
 }
